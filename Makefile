@@ -14,7 +14,16 @@ SCHEME_CLI     = glosa
 DEST           = platform=macOS,arch=arm64
 MACRO_FLAG     = -skipMacroValidation -skipPackagePluginValidation
 DERIVED_DATA   = $(HOME)/Library/Developer/Xcode/DerivedData
-BUNDLE         = glosa-tools_GlosaDirector.bundle
+
+# Resource bundles that MUST ship next to the binary or the CLI fails at
+# runtime. GlosaDirector vends the vocabulary glossary; mlx-swift_Cmlx vends
+# default.metallib — without it, `glosa score`/`phrasing`/`compare` die with
+# "Failed to load the default metallib". `dist`/`install` copy EVERY *.bundle
+# from the product dir (swift-transformers/crypto/ZIPFoundation too, since the
+# tokenizer path may load from them) and hard-fail if either required one is
+# missing.
+GLOSSARY_BUNDLE = glosa-tools_GlosaDirector.bundle
+MLX_BUNDLE      = mlx-swift_Cmlx.bundle
 
 # Version for `dist`. Override explicitly in CI (`make dist VERSION=0.5.0`); the
 # release workflow does this from the tag. Falls back to the latest git tag,
@@ -94,40 +103,45 @@ release: check-arch
 		-configuration Release \
 		$(MACRO_FLAG)
 
-# Install CLI (binary + resource bundle) to project bin/
-install: release
-	@echo "📦 Installing glosa to bin/..."
-	@mkdir -p bin
-	@PRODUCT_DIR=$$(find "$(DERIVED_DATA)"/glosa-tools-*/Build/Products/Release -maxdepth 1 -name glosa -type f 2>/dev/null | head -1 | xargs dirname); \
-	if [ -z "$$PRODUCT_DIR" ] || [ ! -f "$$PRODUCT_DIR/glosa" ]; then \
-		echo "❌ Error: Could not find built glosa executable"; exit 1; \
-	fi; \
-	cp "$$PRODUCT_DIR/glosa" bin/glosa; \
-	chmod +x bin/glosa; \
-	if [ ! -d "$$PRODUCT_DIR/$(BUNDLE)" ]; then \
-		echo "❌ Error: $(BUNDLE) not found next to the binary"; exit 1; \
-	fi; \
-	rm -rf "bin/$(BUNDLE)"; \
-	cp -R "$$PRODUCT_DIR/$(BUNDLE)" bin/; \
-	echo "✅ Installed glosa + $(BUNDLE) to bin/"
-
-# Create distributable tarball (binary + resource bundle) for Homebrew
-dist: release
-	@echo "📦 Creating distribution tarball..."
-	@mkdir -p dist bin
-	@V="$(VERSION)"; [ -z "$$V" ] && V="0.0.0"; \
+# Copy the glosa binary + ALL resource bundles from the Release product dir
+# into bin/, hard-failing if either required bundle is missing. Shared by
+# `install` and `dist`.
+define STAGE_BIN
+	mkdir -p bin; \
 	PRODUCT_DIR=$$(find "$(DERIVED_DATA)"/glosa-tools-*/Build/Products/Release -maxdepth 1 -name glosa -type f 2>/dev/null | head -1 | xargs dirname); \
 	if [ -z "$$PRODUCT_DIR" ] || [ ! -f "$$PRODUCT_DIR/glosa" ]; then \
 		echo "❌ Error: Could not find built glosa executable"; exit 1; \
 	fi; \
-	if [ ! -d "$$PRODUCT_DIR/$(BUNDLE)" ]; then \
-		echo "❌ Error: $(BUNDLE) not found next to the binary — refusing to ship an incomplete tarball"; exit 1; \
-	fi; \
-	cp "$$PRODUCT_DIR/glosa" bin/; \
-	rm -rf "bin/$(BUNDLE)"; \
-	cp -R "$$PRODUCT_DIR/$(BUNDLE)" bin/; \
+	for req in "$(GLOSSARY_BUNDLE)" "$(MLX_BUNDLE)"; do \
+		if [ ! -d "$$PRODUCT_DIR/$$req" ]; then \
+			echo "❌ Error: required bundle $$req not found next to the binary — refusing to ship an incomplete package"; exit 1; \
+		fi; \
+	done; \
+	cp "$$PRODUCT_DIR/glosa" bin/glosa; \
+	chmod +x bin/glosa; \
+	for b in "$$PRODUCT_DIR"/*.bundle; do \
+		name=$$(basename "$$b"); \
+		rm -rf "bin/$$name"; \
+		cp -R "$$b" bin/; \
+		echo "  bundled $$name"; \
+	done
+endef
+
+# Install CLI (binary + all resource bundles) to project bin/
+install: release
+	@echo "📦 Installing glosa to bin/..."
+	@$(STAGE_BIN); \
+	echo "✅ Installed glosa + resource bundles to bin/"
+
+# Create distributable tarball (binary + all resource bundles) for Homebrew
+dist: release
+	@echo "📦 Creating distribution tarball..."
+	@mkdir -p dist
+	@$(STAGE_BIN); \
+	V="$(VERSION)"; [ -z "$$V" ] && V="0.0.0"; \
 	TARBALL="dist/glosa-$$V-arm64-macos.tar.gz"; \
-	tar -C bin -czf "$$TARBALL" glosa "$(BUNDLE)"; \
+	rm -f "$$TARBALL"; \
+	tar -C bin -czf "$$TARBALL" glosa $$(cd bin && echo *.bundle); \
 	SHA256=$$(shasum -a 256 "$$TARBALL" | cut -d' ' -f1); \
 	echo ""; \
 	echo "=== Distribution Package ==="; \
