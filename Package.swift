@@ -73,13 +73,12 @@ let package = Package(
           from: "0.19.2"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.7.1"),
         .package(url: "https://github.com/jkandzi/Progress.swift", from: "0.4.0"),
-        // Cap to 0.5.x: swift-tokenizers 0.6.0 switched its Rust binary target from
-        // XCFramework to artifactbundle, breaking `canImport(TokenizersRust)` in
-        // xcodebuild and producing "cannot find type 'RustBuffer' in scope" errors in
-        // TokenizersFFI. Pulled in transitively via mlx-swift-lm; pin here directly
-        // so SwiftPM resolves down. Re-evaluate when upstream restores xcodebuild
-        // compatibility.
-        .package(url: "https://github.com/DePasqualeOrg/swift-tokenizers.git", .upToNextMinor(from: "0.5.0")),
+        // NOTE: no swift-tokenizers pin. SwiftBruja migrated its tokenizer seam to
+        // huggingface/swift-transformers (which vends the `Tokenizers` target) and
+        // dropped the DePasqualeOrg swift-tokenizers / swift-tokenizers-mlx forks.
+        // Pinning swift-tokenizers here dragged a *second* `Tokenizers` target into
+        // the graph and broke resolution ("conflicting name: 'Tokenizers'"). The
+        // concrete tokenizer now resolves transitively via SwiftBruja.
     ],
     targets: [
         // MARK: - GlosaAnnotation (GlosaCore + SwiftCompartido)

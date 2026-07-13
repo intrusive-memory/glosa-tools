@@ -1,0 +1,13 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+*.profraw
+/bin
+/dist
+Package.resolved
+**/xcshareddata/swiftpm/Package.resolved
+.claude/
+/build

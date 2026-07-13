@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  ACERVO_APP_GROUP_ID: group.intrusive-memory.models
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos-tests:
+    name: Build and Test on macOS
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Build (compiles CLI + all targets)
+        run: make build
+
+      - name: Run model-free tests
+        run: make test-ci 2>&1 | tee test_output.txt
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-test-results
+          path: test_output.txt
+          retention-days: 7
