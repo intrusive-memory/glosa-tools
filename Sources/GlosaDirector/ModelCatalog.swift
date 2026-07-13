@@ -18,6 +18,16 @@ public enum ModelCatalog {
   /// JSON-mode output tightly. Download footprint is ~1.9 GB.
   public static let defaultModelId = "mlx-community/Qwen2.5-3B-Instruct-4bit"
 
+  /// A larger, higher-fidelity alternative registered for `--model` selection.
+  ///
+  /// Qwen2.5-7B-Instruct (4-bit MLX) trades a bigger download / memory footprint
+  /// (~4.3 GB) for noticeably better character-direction nuance than the 3B
+  /// default — worth it on scenes where the constraint/intent quality matters.
+  /// Not the default (the 3B keeps `score` fast and light); pass explicitly via
+  /// `--model mlx-community/Qwen2.5-7B-Instruct-4bit`. Already published on the
+  /// intrusive-memory CDN.
+  public static let largeModelId = "mlx-community/Qwen2.5-7B-Instruct-4bit"
+
   /// All component descriptors GLOSA knows about.
   ///
   /// Descriptors are intentionally un-hydrated here: the file list is omitted
@@ -33,7 +43,15 @@ public enum ModelCatalog {
       repoId: defaultModelId,
       minimumMemoryBytes: 0,
       metadata: [:]
-    )
+    ),
+    ComponentDescriptor(
+      id: largeModelId,
+      type: .languageModel,
+      displayName: "Qwen2.5 7B Instruct (4-bit MLX)",
+      repoId: largeModelId,
+      minimumMemoryBytes: 0,
+      metadata: [:]
+    ),
   ]
 
   /// Register every catalogue descriptor with `SwiftAcervo`.
