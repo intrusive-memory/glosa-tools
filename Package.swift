@@ -70,7 +70,7 @@ let package = Package(
         sibling(
           "SwiftAcervo",
           remote: "https://github.com/intrusive-memory/SwiftAcervo.git",
-          from: "0.19.2"),
+          from: "0.25.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.7.1"),
         .package(url: "https://github.com/jkandzi/Progress.swift", from: "0.4.0"),
         // NOTE: no swift-tokenizers pin. SwiftBruja migrated its tokenizer seam to

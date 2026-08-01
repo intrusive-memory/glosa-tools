@@ -1,5 +1,6 @@
 import ArgumentParser
 import GlosaDirector
+import SwiftAcervo
 
 /// Shared options available to all glosa subcommands.
 ///
@@ -61,6 +62,11 @@ struct GlosaCommand: AsyncParsableCommand {
     discussion: """
       glosa annotates screenplays with GLOSA performance directives and compiles them
       into natural-language instruct strings for TTS (text-to-speech) systems.
+
+      Scoring runs a local LLM whose weights are fetched from the CDN on first
+      use and cached in the shared App Group container.
+
+      \(Acervo.environmentHelp())
       """,
     subcommands: [
       ScoreCommand.self,
