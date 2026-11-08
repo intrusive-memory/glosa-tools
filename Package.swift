@@ -14,10 +14,9 @@ let package = Package(
         .executable(name: "glosa", targets: ["glosa"]),
     ],
     dependencies: [
-        // glosa-av vends the GlosaCore library. The floor is the forthcoming
-        // glosa-av next-minor release (tagged in Sortie 6); during the mission
-        // the sibling helper resolves this to the local ../glosa-av checkout.
-        .package(url: "https://github.com/intrusive-memory/glosa-av.git", .upToNextMajor(from: "0.9.1")),
+        // glosa-av vends the GlosaCore library. The floor is 0.10.0, the release
+        // that adds `Shot.id` and reads notation 2.0 shots.
+        .package(url: "https://github.com/intrusive-memory/glosa-av.git", .upToNextMajor(from: "0.10.0")),
         .package(url: "https://github.com/intrusive-memory/SwiftCompartido.git", .upToNextMajor(from: "7.4.0")),
         .package(url: "https://github.com/intrusive-memory/SwiftBruja.git", .upToNextMajor(from: "1.11.0")),
         .package(url: "https://github.com/intrusive-memory/SwiftAcervo.git", .upToNextMajor(from: "0.25.0")),
