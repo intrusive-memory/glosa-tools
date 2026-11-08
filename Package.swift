@@ -52,13 +52,13 @@ let package = Package(
         .executable(name: "glosa", targets: ["glosa"]),
     ],
     dependencies: [
-        // glosa-av vends the GlosaCore library. The floor is the forthcoming
-        // glosa-av next-minor release (tagged in Sortie 6); during the mission
-        // the sibling helper resolves this to the local ../glosa-av checkout.
+        // glosa-av vends the GlosaCore library. The floor is 0.10.0, the release
+        // that adds `Shot.id` and reads notation 2.0 shots. While developing, the
+        // sibling helper resolves this to the local ../glosa-av checkout.
         sibling(
           "glosa-av",
           remote: "https://github.com/intrusive-memory/glosa-av.git",
-          from: "0.5.0"),
+          from: "0.10.0"),
         sibling(
           "SwiftCompartido",
           remote: "https://github.com/intrusive-memory/SwiftCompartido.git",
